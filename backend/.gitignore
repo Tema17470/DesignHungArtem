@@ -1,0 +1,88 @@
+# ===============================
+# Global ignores
+# ===============================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.lock
+
+# Node + Vite + React
+# ===============================
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# Env files (keep local secrets out of git)
+.env
+.env.*
+!.env.example
+
+# Debug/coverage
+coverage/
+.nyc_output/
+
+# IDE/editor
+.vscode/
+.idea/
+*.iml
+
+# ===============================
+# .NET / ASP.NET Core
+# ===============================
+bin/
+obj/
+out/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.userprefs
+*.sln.docstates
+
+# Visual Studio Code / Rider cache
+.vscode/
+.idea/
+.vs/
+
+# ASP.NET scaffolding
+Generated_Code/
+
+# EF Core Migrations build artifacts
+**/Migrations/**/Snapshot.cs
+**/Migrations/**/obj/
+
+# Logs
+*.log
+logs/
+logs/*
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Publish output
+publish/
+*.pubxml
+*.pubxml.user
+
+# Other local files
+appsettings.Development.json
+appsettings.Local.json
+backend/src/SmartGreenhouse.Api/Properties/launchSettings.json
