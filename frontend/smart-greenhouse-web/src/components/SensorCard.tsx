@@ -1,4 +1,6 @@
 type Props = { title: string; value?: number; unit?: string }
+import * as React from 'react';
+
 
 export function SensorCard({ title, value, unit }: Props) {
     return (

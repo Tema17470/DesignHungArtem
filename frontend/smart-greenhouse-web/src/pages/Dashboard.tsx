@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 import { useEffect, useMemo, useState } from 'react'
 import { fetchReadings, Reading } from '../api/greenhouse'
 import { fetchDevices, Device } from '../api/devices'

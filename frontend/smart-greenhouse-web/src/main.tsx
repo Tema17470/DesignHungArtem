@@ -1,10 +1,11 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import * as React from 'react';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+import * as ReactDOM from 'react-dom/client';
+import App from './App'
+import './index.css'   // <-- import Tailwind layers, replace with correct css file
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>
 )
