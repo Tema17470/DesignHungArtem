@@ -12,7 +12,7 @@ public class ReadingsController : ControllerBase
     public ReadingsController(ReadingService service) => _service = service;
 
     [HttpGet]
-    public async Task<IActionResult> Get([FromQuery] int? deviceId, [FromQuery] string? sensorType)
+    public async Task<IActionResult> Get([FromQuery] int? deviceId, [FromQuery] SensorTypeEnum? sensorType)
         => Ok(await _service.QueryAsync(deviceId, sensorType));
 
     [HttpPost]

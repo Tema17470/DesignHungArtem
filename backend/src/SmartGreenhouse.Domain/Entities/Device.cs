@@ -4,6 +4,7 @@ public class Device
 {
     public int Id { get; set; } // PK
     public string DeviceName { get; set; } = string.Empty; // custom human-readable name
+    public DeviceTypeEnum DeviceType { get; set; } = DeviceTypeEnum.Simulated;// simulated|mqttEdge|usbProbe
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation property
