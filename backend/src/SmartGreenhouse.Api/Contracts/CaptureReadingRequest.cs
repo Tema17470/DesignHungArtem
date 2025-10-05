@@ -1,6 +1,6 @@
 using SmartGreenhouse.Domain.Entities;
 
-namespace Api.Contracts
+namespace SmartGreenhouse.Api.Contracts
 {
     public record CaptureReadingRequest(
         int DeviceId,

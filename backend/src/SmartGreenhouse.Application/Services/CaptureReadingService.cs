@@ -9,7 +9,7 @@ using SmartGreenhouse.Infrastructure.Data;
 using SmartGreenhouse.Domain.Entities;
 
 
-namespace Application.Services
+namespace SmartGreenhouse.Application.Services
 {
     public class CaptureReadingService
     {
