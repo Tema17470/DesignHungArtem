@@ -85,5 +85,5 @@ publish/
 # Other local files
 appsettings.Development.json
 appsettings.Local.json
-appsettings.json
 backend/src/SmartGreenhouse.Api/Properties/launchSettings.json
+backend/src/SmartGreenhouse.Api/appsettings.json
