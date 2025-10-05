@@ -1,3 +1,4 @@
+using SmartGreenhouse.Domain.Enums;
 namespace SmartGreenhouse.Domain.Entities;
 
 public class Device

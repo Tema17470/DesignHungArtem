@@ -1,3 +1,4 @@
+namespace SmartGreenhouse.Domain.Enums;
 public enum DeviceTypeEnum
 {
     Simulated = 0,
