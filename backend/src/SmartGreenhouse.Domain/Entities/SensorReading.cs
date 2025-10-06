@@ -11,8 +11,8 @@ public class SensorReading
     [JsonIgnore]
     public Device? Device { get; set; } // navigation property
 
-    public string SensorType { get; set; } = string.Empty; // temp|humidity|light|soilMoisture
+    public SensorTypeEnum SensorType { get; set; } // temp|humidity|light|soilMoisture
     public double Value { get; set; }
-    public string Unit { get; set; } = string.Empty;       // °C|%|lux|%
+    public string Unit { get; set; } = string.Empty;       // ï¿½C|%|lux|%
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }

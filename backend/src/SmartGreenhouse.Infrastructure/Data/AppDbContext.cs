@@ -12,12 +12,13 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Device>()
-            .HasKey(d => d.Id);
-
+        modelBuilder.Entity<Device>().HasKey(d => d.Id);
+        modelBuilder.Entity<Device>().Property(d => d.DeviceName).HasMaxLength(120);
+        modelBuilder.Entity<Device>().HasIndex(d => d.DeviceName);
+        modelBuilder.Entity<Device>().HasIndex(d => d.DeviceType); // DeviceType index
+        
         modelBuilder.Entity<SensorReading>()
             .HasKey(r => r.Id);
-
         // Configure relationship: one Device → many Readings
         modelBuilder.Entity<SensorReading>()
             .HasOne(r => r.Device)
@@ -28,5 +29,8 @@ public class AppDbContext : DbContext
         // Index for query performance
         modelBuilder.Entity<SensorReading>()
             .HasIndex(r => new { r.DeviceId, r.SensorType, r.Timestamp });
+
+
+
     }
 }

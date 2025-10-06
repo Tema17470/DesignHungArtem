@@ -1,9 +1,7 @@
-import * as React from 'react'
-
 import { useEffect, useMemo, useState } from 'react'
 import { fetchReadings, type Reading } from '../api/greenhouse'
 import { fetchDevices, type Device } from '../api/devices'
-import { SensorCard } from '../components/SensorCard';
+import { SensorCard } from '../components/SensorCard'
 
 export default function Dashboard() {
     const [devices, setDevices] = useState<Device[]>([])
@@ -72,7 +70,7 @@ export default function Dashboard() {
                     No devices found. Create one via Swagger (<code>/api/devices</code>) or cURL (see examples below).
                 </div>
             )}
-            {loading && <div className="text-gray-500">Loading readings…</div>}
+            {loading && <div className="text-gray-500">Loading readingsï¿½</div>}
 
             {/* Sensor cards */}
             {!loading && (
