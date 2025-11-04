@@ -1,8 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using SmartGreenhouse.Application.Services;
+using Application.Abstractions;
+using Application.Events;
+using Application.Events.Observers;
 using SmartGreenhouse.Infrastructure.Data;
-using Application.DeviceIntegration; 
+using Application.DeviceIntegration;
+using Application.Control;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +25,16 @@ builder.Services.AddSingleton<SimulatedDeviceFactory>();
 builder.Services.AddSingleton<IDeviceFactoryResolver, DeviceFactoryResolver>();
 builder.Services.AddScoped<CaptureReadingService>();
 builder.Services.AddScoped<ReadingService>();
-builder.Services.AddScoped<ReadingService>();
+
+builder.Services.AddScoped<IReadingObserver, LogObserver>();
+builder.Services.AddScoped<IReadingObserver, AlertRuleObserver>();
+builder.Services.AddScoped<IReadingPublisher, ReadingPublisher>();
+
+builder.Services.AddScoped<HysteresisCoolingStrategy>();
+builder.Services.AddScoped<MoistureTopUpStrategy>();
+builder.Services.AddScoped<IControlStrategySelector, ControlStrategySelector>();
+builder.Services.AddScoped<ControlService>();
+
 
 var app = builder.Build();
 
