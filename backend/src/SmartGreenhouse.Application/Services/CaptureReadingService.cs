@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Abstractions;
 using Application.Factories;
+using Application.Events;
 using Application.DeviceIntegration;
 using Microsoft.EntityFrameworkCore;
 using SmartGreenhouse.Infrastructure.Data;
@@ -15,11 +16,13 @@ namespace SmartGreenhouse.Application.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly IDeviceFactoryResolver _deviceFactoryResolver;
+        private readonly IReadingPublisher _publisher;
 
-        public CaptureReadingService(AppDbContext dbContext, IDeviceFactoryResolver deviceFactoryResolver)
+        public CaptureReadingService(AppDbContext dbContext, IDeviceFactoryResolver deviceFactoryResolver, IReadingPublisher publisher)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _deviceFactoryResolver = deviceFactoryResolver ?? throw new ArgumentNullException(nameof(deviceFactoryResolver));
+            _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
         }
 
         public async Task<SensorReading> CaptureAsync(int deviceId, SensorTypeEnum sensorType, CancellationToken ct = default)
@@ -57,6 +60,17 @@ namespace SmartGreenhouse.Application.Services
             // Save to database
             _dbContext.Readings.Add(reading);
             await _dbContext.SaveChangesAsync(ct);
+
+            // Publishing reading
+            var readingEvent = new ReadingEvent
+            (
+                reading.DeviceId,
+                reading.SensorType,
+                reading.Value,
+                reading.Timestamp
+            );
+
+            await _publisher.PublishAsync(readingEvent, ct);
 
             return reading;
         }
