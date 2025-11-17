@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SmartGreenhouse.Application.State;
 
-namespace Application.Adapters.Actuators
+namespace SmartGreenhouse.Application.Adapters.Actuators
 {
     public class SimulatedActuatorAdapter : IActuatorAdapter
     {

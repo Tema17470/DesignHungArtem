@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Application.Adapters.Notifications
+namespace SmartGreenhouse.Application.Adapters.Notifications
 {
     public class ConsoleNotificationAdapter : INotificationAdapter
     {
