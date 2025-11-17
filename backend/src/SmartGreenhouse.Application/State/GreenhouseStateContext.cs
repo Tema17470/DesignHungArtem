@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using SmartGreenhouse.Domain.Entities;
 using Application.Control;
+using Application.Abstractions;
 
 namespace SmartGreenhouse.Application.State
 {
@@ -13,11 +14,24 @@ namespace SmartGreenhouse.Application.State
         public double TemperatureThreshold { get; init; } = 26.0;
         public double SoilMoistureThreshold { get; init; } = 30.0;
 
-        public GreenhouseStateContext(int deviceId, IReadOnlyList<SensorReading>? readings = null)
+        // Add adapters
+        public IActuatorAdapter ActuatorAdapter { get; init; } = null!;
+        public INotificationAdapter NotificationAdapter { get; init; } = null!;
+
+        public GreenhouseStateContext(
+            int deviceId,
+            IReadOnlyList<SensorReading>? readings = null,
+            IActuatorAdapter? actuatorAdapter = null,
+            INotificationAdapter? notificationAdapter = null)
         {
             DeviceId = deviceId;
             if (readings != null)
                 LatestReadings = readings;
+
+            if (actuatorAdapter != null)
+                ActuatorAdapter = actuatorAdapter;
+            if (notificationAdapter != null)
+                NotificationAdapter = notificationAdapter;
         }
     }
 }
