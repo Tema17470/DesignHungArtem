@@ -7,6 +7,11 @@ using Application.Events.Observers;
 using SmartGreenhouse.Infrastructure.Data;
 using Application.DeviceIntegration;
 using Application.Control;
+using SmartGreenhouse.Application.State;
+using SmartGreenhouse.Application.State.States;
+using SmartGreenhouse.Application.Adapters;
+using SmartGreenhouse.Application.Adapters.Actuators;
+using SmartGreenhouse.Application.Adapters.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +40,34 @@ builder.Services.AddScoped<MoistureTopUpStrategy>();
 builder.Services.AddScoped<IControlStrategySelector, ControlStrategySelector>();
 builder.Services.AddScoped<ControlService>();
 
+// HTTP clients for adapters
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<HttpActuatorAdapter>(client =>
+{
+    // Default external IoT hub or device controller URL (example)
+    client.BaseAddress = new Uri("http://localhost:5055/");
+});
+builder.Services.AddHttpClient("WebhookClient");
+
+// Adapters
+builder.Services.AddSingleton<INotificationAdapter, ConsoleNotificationAdapter>();
+builder.Services.AddSingleton<IActuatorAdapter, SimulatedActuatorAdapter>();
+builder.Services.AddSingleton<AdapterRegistry>(sp =>
+    new AdapterRegistry(
+        sp.GetRequiredService<IActuatorAdapter>(),
+        sp.GetRequiredService<INotificationAdapter>()
+    )
+);
+
+// State engine & service
+builder.Services.AddScoped<GreenhouseStateEngine>();
+builder.Services.AddScoped<StateService>();
+
+// Optionally register concrete states in DI if you want to resolve by name:
+builder.Services.AddScoped<IdleState>();
+builder.Services.AddScoped<CoolingState>();
+builder.Services.AddScoped<IrrigatingState>();
+builder.Services.AddScoped<AlarmState>();
 
 var app = builder.Build();
 
