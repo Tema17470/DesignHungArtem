@@ -31,29 +31,40 @@ public class StateController : ControllerBase
 
     // POST /api/state/adapters
     [HttpPost("adapters")]
-public IActionResult SetAdapters([FromBody] AdapterSettingsRequest req)
-{
-    if (req.ActuatorMode == "Http")
+    public IActionResult SetAdapters([FromBody] AdapterSettingsRequest req)
     {
-        var client = new HttpClient { BaseAddress = new Uri("http://localhost:5055/") };
-        _registry.SetActuatorAdapter(new HttpActuatorAdapter(client));
+        if (req.ActuatorMode == "Http")
+        {
+            var client = new HttpClient { BaseAddress = new Uri("http://localhost:5055/") };
+            _registry.SetActuatorAdapter(new HttpActuatorAdapter(client));
+        }
+        else
+        {
+            _registry.SetActuatorAdapter(new SimulatedActuatorAdapter());
+        }
+
+        if (req.NotificationMode == "Webhook")
+        {
+            var client = new HttpClient();
+            _registry.SetNotificationAdapter(new WebhookNotificationAdapter(client, req.WebhookUrl ?? ""));
+        }
+        else
+        {
+            _registry.SetNotificationAdapter(new ConsoleNotificationAdapter());
+        }
+
+        return Ok("Adapters updated successfully.");
     }
-    else
+    // POST /api/state/tick
+    [HttpPost("tick")]
+    public async Task<IActionResult> Tick([FromBody] RunStateTickRequest req, CancellationToken ct)
     {
-        _registry.SetActuatorAdapter(new SimulatedActuatorAdapter());
+        if (req == null || req.DeviceId <= 0)
+            return BadRequest("Invalid deviceId.");
+
+        var result = await _stateService.TickAsync(req.DeviceId, ct);
+        return Ok(result);
     }
 
-    if (req.NotificationMode == "Webhook")
-    {
-        var client = new HttpClient();
-        _registry.SetNotificationAdapter(new WebhookNotificationAdapter(client, req.WebhookUrl ?? ""));
-    }
-    else
-    {
-        _registry.SetNotificationAdapter(new ConsoleNotificationAdapter());
-    }
-
-    return Ok("Adapters updated successfully.");
-}
 }
 }

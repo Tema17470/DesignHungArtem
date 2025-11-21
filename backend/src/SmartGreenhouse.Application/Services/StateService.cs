@@ -16,12 +16,15 @@ namespace SmartGreenhouse.Application.Services
         private readonly AppDbContext _db;
         private readonly GreenhouseStateEngine _engine;
         private readonly IActuatorAdapter _actuatorAdapter;
+        private readonly INotificationAdapter _notificationAdapter; 
+        INotificationAdapter notificationAdapter;
 
         public StateService(AppDbContext db, GreenhouseStateEngine engine, IActuatorAdapter actuatorAdapter)
         {
             _db = db;
             _engine = engine;
             _actuatorAdapter = actuatorAdapter;
+            _notificationAdapter = notificationAdapter;
         }
 
         public async Task<GreenhouseStateEngine.TransitionResult> TickAsync(int deviceId, CancellationToken ct = default)
@@ -42,7 +45,12 @@ namespace SmartGreenhouse.Application.Services
             string currentStateName = lastSnapshot?.StateName ?? "Idle";
 
             // Create context
-            var context = new State.GreenhouseStateContext(deviceId, latestReadings);
+            var context = new State.GreenhouseStateContext(
+                deviceId,
+                latestReadings,
+                _actuatorAdapter,
+                _notificationAdapter
+            );
 
             // Resolve the current state
             IGreenhouseState state = currentStateName switch

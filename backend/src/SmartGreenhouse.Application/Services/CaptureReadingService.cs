@@ -25,54 +25,62 @@ namespace SmartGreenhouse.Application.Services
             _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
         }
 
-        public async Task<SensorReading> CaptureAsync(int deviceId, SensorTypeEnum sensorType, CancellationToken ct = default)
-        {
-            // Load device from DB
-            var device = await _dbContext.Devices
-                .FirstOrDefaultAsync(d => d.Id == deviceId, ct);
+        public async Task<SensorReading> CaptureAsync(
+    int deviceId, 
+    SensorTypeEnum sensorType, 
+    double? value = null,    
+    string? unit = null,       
+    CancellationToken ct = default)
+{
+    // Load device from DB
+    var device = await _dbContext.Devices
+        .FirstOrDefaultAsync(d => d.Id == deviceId, ct);
 
-            if (device == null)
-                throw new InvalidOperationException($"Device with ID {deviceId} not found.");
+    if (device == null)
+        throw new InvalidOperationException($"Device with ID {deviceId} not found.");
 
-            // Resolve the device factory
-            var factory = _deviceFactoryResolver.Resolve(device.DeviceType);
+    double normalizedValue;
+    string canonicalUnit;
 
-            // Get sensor reader
-            var sensorReader = factory.CreateSensorReader();
+    if (value.HasValue)
+    {
+        normalizedValue = value.Value;
+        canonicalUnit = unit; 
+    }
+    else
+    {
+        var factory = _deviceFactoryResolver.Resolve(device.DeviceType);
+        var sensorReader = factory.CreateSensorReader();
+        double rawValue = await sensorReader.ReadAsync(deviceId, sensorType, ct);
+        var normalizer = SensorNormalizerFactory.Create(sensorType);
+        normalizedValue = normalizer.Normalize(rawValue);
+        canonicalUnit = normalizer.CanonicalUnit;
+    }
 
-            // Read raw value
-            double rawValue = await sensorReader.ReadAsync(deviceId, sensorType, ct);
+    // Create sensor reading
+    var reading = new SensorReading
+    {
+        DeviceId = deviceId,
+        SensorType = sensorType,
+        Value = normalizedValue,
+        Unit = canonicalUnit,
+        Timestamp = DateTime.UtcNow
+    };
 
-            // Normalize
-            var normalizer = SensorNormalizerFactory.Create(sensorType);
-            double normalizedValue = normalizer.Normalize(rawValue);
+    _dbContext.Readings.Add(reading);
+    await _dbContext.SaveChangesAsync(ct);
 
-            // Create sensor reading
-            var reading = new SensorReading
-            {
-                DeviceId = deviceId,
-                SensorType = sensorType,          // enum
-                Value = normalizedValue,
-                Unit = normalizer.CanonicalUnit,
-                Timestamp = DateTime.UtcNow
-            };
+    // Publish reading
+    var readingEvent = new ReadingEvent(
+        reading.DeviceId,
+        reading.SensorType,
+        reading.Value,
+        reading.Timestamp
+    );
+    await _publisher.PublishAsync(readingEvent, ct);
 
-            // Save to database
-            _dbContext.Readings.Add(reading);
-            await _dbContext.SaveChangesAsync(ct);
+    return reading;
+}
 
-            // Publishing reading
-            var readingEvent = new ReadingEvent
-            (
-                reading.DeviceId,
-                reading.SensorType,
-                reading.Value,
-                reading.Timestamp
-            );
-
-            await _publisher.PublishAsync(readingEvent, ct);
-
-            return reading;
-        }
     }
 }

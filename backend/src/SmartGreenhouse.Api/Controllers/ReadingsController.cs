@@ -33,7 +33,7 @@ public class ReadingsController : ControllerBase
     [HttpPost("capture")]
     public async Task<IActionResult> Capture([FromBody] CaptureReadingRequest req)
     {
-        var r = await _capture.CaptureAsync(req.DeviceId, req.SensorType);
+        var r = await _capture.CaptureAsync(req.DeviceId, req.SensorType, req.Value, req.Unit);
         return Ok(new ReadingDto(r.Id, r.DeviceId, r.SensorType, r.Value, r.Unit, r.Timestamp));
     }
 }
