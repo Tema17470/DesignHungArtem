@@ -58,6 +58,7 @@ builder.Services.AddSingleton<AdapterRegistry>(sp =>
         sp.GetRequiredService<INotificationAdapter>()
     )
 );
+ 
 
 // State engine & service
 builder.Services.AddScoped<GreenhouseStateEngine>();
