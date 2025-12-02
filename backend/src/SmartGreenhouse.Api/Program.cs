@@ -12,6 +12,8 @@ using SmartGreenhouse.Application.State.States;
 using SmartGreenhouse.Application.Adapters;
 using SmartGreenhouse.Application.Adapters.Actuators;
 using SmartGreenhouse.Application.Adapters.Notifications;
+using SmartGreenhouse.Api.RealTime;
+using System.Net.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +60,13 @@ builder.Services.AddSingleton<AdapterRegistry>(sp =>
         sp.GetRequiredService<INotificationAdapter>()
     )
 );
- 
+
+// realtime
+builder.Services.AddSingleton<LiveReadingHub>();
+builder.Services.AddSingleton<SmartGreenhouse.Application.RealTime.IRealTimeNotifier, WebSocketRealTimeNotifier>();
+
+// mqtt broker
+builder.Services.AddHostedService<MqttBrokerHostedService>();
 
 // State engine & service
 builder.Services.AddScoped<GreenhouseStateEngine>();
@@ -70,6 +78,7 @@ builder.Services.AddScoped<CoolingState>();
 builder.Services.AddScoped<IrrigatingState>();
 builder.Services.AddScoped<AlarmState>();
 
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -77,6 +86,33 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseWebSockets();
+
+app.Map("/ws/live-readings", async context =>
+{
+    if (!context.WebSockets.IsWebSocketRequest)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        return;
+    }
+
+    var hub = context.RequestServices.GetRequiredService<LiveReadingHub>();
+    var socket = await context.WebSockets.AcceptWebSocketAsync();
+
+    hub.Register(socket);
+
+    var buffer = new byte[4096];
+    while (socket.State == WebSocketState.Open)
+    {
+        var result = await socket.ReceiveAsync(buffer, CancellationToken.None);
+        if (result.MessageType == WebSocketMessageType.Close)
+            break;
+    }
+
+    hub.Unregister(socket);
+    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+});
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

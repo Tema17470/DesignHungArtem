@@ -16,3 +16,4 @@ public class SensorReading
     public string Unit { get; set; } = string.Empty;       // �C|%|lux|%
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
+

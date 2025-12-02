@@ -7,7 +7,8 @@ using Microsoft.Extensions.Logging;
 using SmartGreenhouse.Infrastructure.Data;
 using SmartGreenhouse.Domain.Entities;
 using SmartGreenhouse.Domain.Enums;
-using Application.Abstractions;
+using SmartGreenhouse.Application.Contracts;
+using SmartGreenhouse.Application.RealTime;
 
 namespace SmartGreenhouse.Application.Mqtt
 {
@@ -15,15 +16,15 @@ namespace SmartGreenhouse.Application.Mqtt
     {
         private readonly IDbContextFactory<AppDbContext> _dbFactory;
         private readonly ILogger<Esp32MessageHandler> _logger;
-        private readonly IRealTimeNotifier _notifier;
+        private readonly IRealTimeNotifier? _realTimeNotifier;
 
         public Esp32MessageHandler(IDbContextFactory<AppDbContext> dbFactory,
                                    ILogger<Esp32MessageHandler> logger,
-                                   IRealTimeNotifier notifier)
+                                   IRealTimeNotifier? realTimeNotifier)
         {
             _dbFactory = dbFactory ?? throw new ArgumentNullException(nameof(dbFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _notifier = notifier; // may be null in some registrations
+            _realTimeNotifier = realTimeNotifier; // may be null in some registrations
         }
 
         public async Task HandleAsync(string topic, string payload, CancellationToken ct = default)
@@ -93,8 +94,19 @@ namespace SmartGreenhouse.Application.Mqtt
                     _logger.LogInformation("Stored sensor reading (Device={DeviceName}, Id={DeviceId}, Type={Type}, Value={Value})",
                         deviceName, device.Id, sensorType, espPayload.Value);
 
-                    // Call helper to map to DTO and notify clients (implemented in Part 2)
-                    await NotifyClientsAsync(reading, device, ct);
+                    // Map to DTO and broadcast to real-time clients if available
+                    var dtoOut = MapToDto(reading, device);
+                    if (_realTimeNotifier != null)
+                    {
+                        try
+                        {
+                            await _realTimeNotifier.BroadcastReadingAsync(dtoOut, ct);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Broadcasting reading failed for ReadingId={ReadingId}", reading.Id);
+                        }
+                    }
                 }
                 else
                 {
@@ -112,37 +124,24 @@ namespace SmartGreenhouse.Application.Mqtt
         }
 
         // Internal payload model for ESP32 JSON messages
-        private sealed class Esp32Payload
-        {
-            public double Value { get; set; }
-            public string Unit { get; set; } = string.Empty;
-            public DateTime? Timestamp { get; set; }
-        }
+    private sealed class Esp32Payload
+{
+    public double Value { get; set; }
+    public string Unit { get; set; } = "";
+    public DateTime? Timestamp { get; set; }
+}
 
-        // Helper called after a reading is saved; will later map to DTO and notify clients
-        private async Task NotifyClientsAsync(SensorReading reading, Device device, CancellationToken ct = default)
-        {
-            if (_notifier == null)
-            {
-                _logger.LogDebug("No IRealTimeNotifier registered; skipping client notification for reading {ReadingId}", reading?.Id);
-                return;
-            }
-
-            // Minimal payload mapping for now; will be replaced with proper DTO mapping in Part 2
-            var payload = new
-            {
-                device = new { id = device.Id, name = device.DeviceName },
-                reading = new { id = reading.Id, sensorType = reading.SensorType, value = reading.Value, unit = reading.Unit, timestamp = reading.Timestamp }
-            };
-
-            try
-            {
-                await _notifier.NotifyDeviceAsync(device.Id, "reading", payload, ct);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Notifier failed for reading {ReadingId}", reading?.Id);
-            }
-        }
+        private ReadingDto MapToDto(SensorReading reading, Device device)
+            => new(
+                reading.Id,
+                reading.DeviceId,
+                device.DeviceName,
+                reading.SensorType,
+                reading.Value,
+                reading.Unit,
+                reading.Timestamp
+            );
+        
     }
+    
 }
