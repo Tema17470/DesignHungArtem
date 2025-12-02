@@ -2,9 +2,6 @@ using MQTTnet;
 using MQTTnet.Server;
 using System.Text;
 using SmartGreenhouse.Application.Mqtt;
-using Microsoft.Extensions.Hosting;
-
-namespace SmartGreenhouse.Api.RealTime;
 
 public class MqttBrokerHostedService : IHostedService
 {
@@ -28,8 +25,7 @@ public class MqttBrokerHostedService : IHostedService
         _server.InterceptingPublishAsync += async e =>
         {
             var topic = e.ApplicationMessage.Topic ?? "";
-            var payloadBytes = e.ApplicationMessage.Payload;
-            var payload = payloadBytes == null ? string.Empty : Encoding.UTF8.GetString(payloadBytes);
+            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
 
             await _handler.HandleAsync(topic, payload, ct);
         };
