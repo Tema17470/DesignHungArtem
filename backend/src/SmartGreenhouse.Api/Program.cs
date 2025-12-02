@@ -14,6 +14,7 @@ using SmartGreenhouse.Application.Adapters.Actuators;
 using SmartGreenhouse.Application.Adapters.Notifications;
 using SmartGreenhouse.Api.RealTime;
 using System.Net.WebSockets;
+using SmartGreenhouse.Application.Mqtt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,7 @@ builder.Services.AddSwaggerGen();
 
 var cs = builder.Configuration.GetConnectionString("Default")
          ?? "Host=localhost;Port=5432;Database=greenhouse;Username=greenhouse;Password=greenhouse";
+builder.Services.AddDbContextFactory<AppDbContext>(opt => opt.UseNpgsql(cs));
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(cs));
 
 builder.Services.AddSingleton<SimulatedDeviceFactory>();
@@ -64,6 +66,9 @@ builder.Services.AddSingleton<AdapterRegistry>(sp =>
 // realtime
 builder.Services.AddSingleton<LiveReadingHub>();
 builder.Services.AddSingleton<SmartGreenhouse.Application.RealTime.IRealTimeNotifier, WebSocketRealTimeNotifier>();
+
+// mqtt handler
+builder.Services.AddScoped<IEsp32MessageHandler, Esp32MessageHandler>();
 
 // mqtt broker
 builder.Services.AddHostedService<MqttBrokerHostedService>();

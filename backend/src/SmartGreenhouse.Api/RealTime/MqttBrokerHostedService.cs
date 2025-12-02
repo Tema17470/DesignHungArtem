@@ -2,15 +2,16 @@ using MQTTnet;
 using MQTTnet.Server;
 using System.Text;
 using SmartGreenhouse.Application.Mqtt;
+using Microsoft.Extensions.DependencyInjection;
 
 public class MqttBrokerHostedService : IHostedService
 {
     private MqttServer? _server;
-    private readonly IEsp32MessageHandler _handler;
+    private readonly IServiceProvider _serviceProvider;
 
-    public MqttBrokerHostedService(IEsp32MessageHandler handler)
+    public MqttBrokerHostedService(IServiceProvider serviceProvider)
     {
-        _handler = handler;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task StartAsync(CancellationToken ct)
@@ -27,7 +28,12 @@ public class MqttBrokerHostedService : IHostedService
             var topic = e.ApplicationMessage.Topic ?? "";
             var payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
 
-            await _handler.HandleAsync(topic, payload, ct);
+            // Create a scope to get the scoped handler
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var handler = scope.ServiceProvider.GetRequiredService<IEsp32MessageHandler>();
+                await handler.HandleAsync(topic, payload, ct);
+            }
         };
 
         await _server.StartAsync();

@@ -1,4 +1,3 @@
-import React from 'react'
 import { LiveReadingsPanel } from '../components/LiveReadingsPanel'
 
 export default function LiveDashboardPage() {
