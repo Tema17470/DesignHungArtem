@@ -15,7 +15,7 @@ type Status = 'connecting' | 'live' | 'disconnected'
 export function useLiveReadings(url = 'ws://localhost:5080/ws/live-readings') {
   const wsRef = useRef<WebSocket | null>(null)
   const [status, setStatus] = useState<Status>('connecting')
-  const [map, setMap] = useState<Map<string, LiveReading>>(new Map())
+  const [list, setList] = useState<LiveReading[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -33,22 +33,33 @@ export function useLiveReadings(url = 'ws://localhost:5080/ws/live-readings') {
       ws.onmessage = evt => {
         try {
           const obj = JSON.parse(evt.data) as LiveReading
-          // Key by device + sensor type to keep latest per sensor
-          const key = `${obj.deviceId}:${obj.sensorType}`
-          setMap(prev => {
-            const copy = new Map(prev)
-            // replace only if newer timestamp
-            const cur = copy.get(key)
-            if (!cur || (cur.timestamp ?? '') < (obj.timestamp ?? '')) {
-              copy.set(key, obj)
+
+          setList(prev => {
+            const next = [...prev, obj]
+
+            // keep only last 5 readings per device
+            const grouped = new Map<string, LiveReading[]>()
+
+            for (const r of next) {
+              const key = `${r.deviceId}:${r.sensorType}`
+              if (!grouped.has(key)) grouped.set(key, [])
+              grouped.get(key)!.push(r)
             }
-            return copy
+
+            // trim each group to last 5 by timestamp
+            const trimmed: LiveReading[] = []
+            for (const arr of grouped.values()) {
+              arr.sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+              trimmed.push(...arr.slice(0, 5))
+            }
+
+            return trimmed
           })
         } catch (e) {
-          // ignore invalid messages
           console.warn('Invalid live message', e)
         }
       }
+
 
       ws.onclose = () => {
         if (cancelled) return
@@ -72,7 +83,9 @@ export function useLiveReadings(url = 'ws://localhost:5080/ws/live-readings') {
     }
   }, [url])
 
-  const readings = [...map.values()].sort((a, b) => (b.timestamp ?? '').localeCompare(a.timestamp ?? ''))
+  const readings = [...list].sort(
+    (a, b) => b.timestamp.localeCompare(a.timestamp)
+  )
 
   return { status, readings }
 }
