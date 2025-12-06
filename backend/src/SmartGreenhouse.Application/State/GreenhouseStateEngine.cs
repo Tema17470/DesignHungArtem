@@ -24,7 +24,7 @@ namespace SmartGreenhouse.Application.State
         // TransitionResult will be defined here for lack of better place
         public record TransitionResult(
             string NextStateName,
-            IReadOnlyList<ActuatorCommand> Commands,
+            List<ActuatorCommand> Commands,
             string? Note = null
         );
 

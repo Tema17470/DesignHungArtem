@@ -17,9 +17,9 @@ namespace SmartGreenhouse.Application.Services
         private readonly GreenhouseStateEngine _engine;
         private readonly IActuatorAdapter _actuatorAdapter;
         private readonly INotificationAdapter _notificationAdapter; 
-        INotificationAdapter notificationAdapter;
 
-        public StateService(AppDbContext db, GreenhouseStateEngine engine, IActuatorAdapter actuatorAdapter)
+        
+        public StateService(AppDbContext db, GreenhouseStateEngine engine, IActuatorAdapter actuatorAdapter, INotificationAdapter notificationAdapter)
         {
             _db = db;
             _engine = engine;
@@ -31,10 +31,11 @@ namespace SmartGreenhouse.Application.Services
         {
             // Get latest readings
             var latestReadings = await _db.Readings
-                .Where(r => r.DeviceId == deviceId)
-                .OrderByDescending(r => r.Timestamp)
-                .Take(5) // use last 5 readings
-                .ToListAsync(ct);
+            .Where(r => r.DeviceId == deviceId)
+            .GroupBy(r => r.SensorType)
+            .Select(g => g.OrderByDescending(r => r.Timestamp).First())
+            .ToListAsync(ct);
+
 
             // Get last saved state
             var lastSnapshot = await _db.DeviceStates

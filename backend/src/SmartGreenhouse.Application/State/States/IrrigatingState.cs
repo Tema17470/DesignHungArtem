@@ -13,7 +13,9 @@ namespace SmartGreenhouse.Application.State.States
             var soilmoistureReading = context.LatestReadings.FirstOrDefault(r => r.SensorType == SensorTypeEnum.SoilMoisture);
             if (soilmoistureReading != null && soilmoistureReading.Value >= context.SoilMoistureThreshold)
             {
-                return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Idle", new List<ActuatorCommand>(), "Soil moisture sufficient → return to idle"));
+                return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Idle", 
+                new List<ActuatorCommand>{ new ActuatorCommand("Pump", "Off") }, 
+                "Soil moisture sufficient → return to idle"));
             }
 
             return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Irrigating",

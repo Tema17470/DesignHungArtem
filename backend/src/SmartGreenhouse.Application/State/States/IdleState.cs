@@ -14,12 +14,18 @@ namespace SmartGreenhouse.Application.State.States
             bool soilmoistureLow = context.LatestReadings.Any(r => r.SensorType == SensorTypeEnum.SoilMoisture && r.Value < context.SoilMoistureThreshold);
 
             if (tempHigh)
-                return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Cooling", new List<ActuatorCommand>(), "Temperature high → start cooling"));
+                return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Cooling",
+                new List<ActuatorCommand>{ new ActuatorCommand("Fan", "On") }, 
+                "Temperature high → start cooling"));
 
             if (soilmoistureLow)
-                return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Irrigating", new List<ActuatorCommand>(), "Soil moisture low → start irrigation"));
+                return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Irrigating", 
+                new List<ActuatorCommand>{ new ActuatorCommand("Pump", "On") }, 
+                "Soil moisture low → start irrigation"));
 
-            return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Idle", new List<ActuatorCommand>(), "Idle → no action"));
+            return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Idle", 
+            new List<ActuatorCommand>{new ActuatorCommand("Fan", "Off"), new ActuatorCommand("Pump", "Off")}, 
+            "Idle → no action"));
         }
     }
 }

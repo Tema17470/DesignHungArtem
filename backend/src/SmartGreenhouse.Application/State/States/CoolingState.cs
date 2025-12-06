@@ -13,7 +13,9 @@ namespace SmartGreenhouse.Application.State.States
             var tempReading = context.LatestReadings.FirstOrDefault(r => r.SensorType == SensorTypeEnum.Temperature);
             if (tempReading != null && tempReading.Value <= context.TemperatureThreshold)
             {
-                return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Idle", new List<ActuatorCommand>(), "Temperature normal → return to idle"));
+                return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Idle", 
+                new List<ActuatorCommand>{new ActuatorCommand("Fan", "Off")}, 
+                "Temperature normal → return to idle"));
             }
 
             return Task.FromResult(new GreenhouseStateEngine.TransitionResult("Cooling",

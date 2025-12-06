@@ -53,7 +53,7 @@ public class StateController : ControllerBase
             _registry.SetNotificationAdapter(new ConsoleNotificationAdapter());
         }
 
-        return Ok("Adapters updated successfully.");
+        return Ok($"System switched to {req.ActuatorMode} actuator mode and {req.NotificationMode} notification mode.");
     }
     // POST /api/state/tick
     [HttpPost("tick")]
